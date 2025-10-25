@@ -64,12 +64,21 @@ export async function stakeAsArbitrator(
             .build();
 
         const xdr = transaction.toXDR();
+        console.log('📤 Transaction XDR created, requesting signature...');
+
         const signedXdr = await signTransaction(xdr, NETWORK_PASSPHRASE);
+
+        if (!signedXdr) {
+            throw new Error('Failed to sign transaction - no XDR returned');
+        }
+
+        console.log('📥 Signed XDR received, building transaction...');
         const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
             signedXdr,
             NETWORK_PASSPHRASE
         );
 
+        console.log('📡 Submitting to Stellar network...');
         const result = await server.submitTransaction(signedTransaction as any);
 
         console.log('✅ Staked successfully!');
@@ -77,9 +86,10 @@ export async function stakeAsArbitrator(
             txHash: result.hash,
             stakeAccount: stakeKeypair.publicKey(),
         };
-    } catch (error) {
-        console.error('Error staking:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('❌ Error staking:', error);
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        throw new Error(`Staking failed: ${errorMsg}`);
     }
 }
 
@@ -103,6 +113,10 @@ export async function submitVoteWithStake(
         const voteStakeKeypair = StellarSdk.Keypair.random();
         const arbitratorAccount = await server.loadAccount(arbitratorPublicKey);
 
+        // Create memo (max 28 bytes) - use short dispute ID
+        const shortDisputeId = disputeId.slice(-8); // Last 8 chars
+        const memo = `V:${shortDisputeId}:${decision.charAt(0)}`; // V:abc123:c or V:abc123:f
+
         const transaction = new StellarSdk.TransactionBuilder(arbitratorAccount, {
             fee: StellarSdk.BASE_FEE,
             networkPassphrase: NETWORK_PASSPHRASE,
@@ -113,24 +127,34 @@ export async function submitVoteWithStake(
                     startingBalance: stakeAmount,
                 })
             )
-            .addMemo(StellarSdk.Memo.text(`VOTE:${disputeId}:${decision}`))
+            .addMemo(StellarSdk.Memo.text(memo))
             .setTimeout(180)
             .build();
 
         const xdr = transaction.toXDR();
+        console.log('📤 Vote transaction created, requesting signature...');
+
         const signedXdr = await signTransaction(xdr, NETWORK_PASSPHRASE);
+
+        if (!signedXdr) {
+            throw new Error('Failed to sign vote transaction - no XDR returned');
+        }
+
+        console.log('📥 Signed vote XDR received, building transaction...');
         const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
             signedXdr,
             NETWORK_PASSPHRASE
         );
 
+        console.log('📡 Submitting vote to Stellar network...');
         const result = await server.submitTransaction(signedTransaction as any);
 
         console.log('✅ Vote submitted!');
         return result.hash;
-    } catch (error) {
-        console.error('Error submitting vote:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('❌ Error submitting vote:', error);
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        throw new Error(`Vote submission failed: ${errorMsg}`);
     }
 }
 
@@ -142,22 +166,27 @@ export async function getArbitratorStats(address: string): Promise<{
     stakedAmount: string;
     votingPower: number;
 }> {
+    // Get staked amount from localStorage (in production, use database)
+    const stakedAmount = localStorage.getItem(`arbitrator_stake_${address}`) || '0';
+    const votingPower = Math.floor(parseFloat(stakedAmount) / 10);
+
     try {
         const account = await server.loadAccount(address);
         const balance = account.balances.find((b) => b.asset_type === 'native');
         const balanceAmount = balance && balance.asset_type === 'native' ? balance.balance : '0';
-
-        // Get staked amount from localStorage (in production, use database)
-        const stakedAmount = localStorage.getItem(`arbitrator_stake_${address}`) || '0';
-        const votingPower = Math.floor(parseFloat(stakedAmount) / 10);
 
         return {
             balance: balanceAmount,
             stakedAmount,
             votingPower,
         };
-    } catch (error) {
-        console.error('Error getting arbitrator stats:', error);
-        return { balance: '0', stakedAmount: '0', votingPower: 0 };
+    } catch (error: any) {
+        // Account not found or other error - return defaults with staked amount
+        console.log('⚠️ Could not load account balance (account may not exist yet)');
+        return {
+            balance: '0',
+            stakedAmount,
+            votingPower
+        };
     }
 }

@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Dispute, Vote } from '@/lib/dao';
+import { saveDispute, getAllDisputes, addVoteToDispute, resolveDispute as resolveDisputeInStorage } from '@/lib/disputeStorage';
 
 interface DisputeContextType {
     disputes: Dispute[];
-    addDispute: (dispute: Omit<Dispute, 'id' | 'votes' | 'status' | 'createdAt'>) => void;
-    addVote: (disputeId: string, vote: Vote) => void;
-    resolveDispute: (disputeId: string, winner: 'client' | 'freelancer') => void;
+    addDispute: (dispute: Omit<Dispute, 'id' | 'votes' | 'status' | 'createdAt'>) => Promise<void>;
+    addVote: (disputeId: string, vote: Vote) => Promise<void>;
+    resolveDispute: (disputeId: string, winner: 'client' | 'freelancer') => Promise<void>;
     getDisputeByJobId: (jobId: string) => Dispute | undefined;
+    refreshDisputes: () => Promise<void>;
 }
 
 const DisputeContext = createContext<DisputeContextType | undefined>(undefined);
@@ -16,67 +18,31 @@ const DisputeContext = createContext<DisputeContextType | undefined>(undefined);
 export function DisputeProvider({ children }: { children: ReactNode }) {
     const [disputes, setDisputes] = useState<Dispute[]>([]);
 
-    // Load from localStorage
+    const loadDisputes = async () => {
+        const loadedDisputes = await getAllDisputes();
+        setDisputes(loadedDisputes);
+    };
+
     useEffect(() => {
-        const stored = localStorage.getItem('disputes');
-        if (stored) {
-            setDisputes(JSON.parse(stored));
-        }
+        loadDisputes();
+        // Poll for updates every 3 seconds (same as jobs)
+        const interval = setInterval(loadDisputes, 3000);
+        return () => clearInterval(interval);
     }, []);
 
-    // Save to localStorage
-    useEffect(() => {
-        localStorage.setItem('disputes', JSON.stringify(disputes));
-    }, [disputes]);
-
-    const addDispute = (dispute: Omit<Dispute, 'id' | 'votes' | 'status' | 'createdAt'>) => {
-        const newDispute: Dispute = {
-            ...dispute,
-            id: `dispute_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            votes: [],
-            status: 'ACTIVE',
-            createdAt: Date.now(),
-        };
-        setDisputes((prev) => [...prev, newDispute]);
+    const addDispute = async (dispute: Omit<Dispute, 'id' | 'votes' | 'status' | 'createdAt'>) => {
+        await saveDispute(dispute);
+        await loadDisputes();
     };
 
-    const addVote = (disputeId: string, vote: Vote) => {
-        setDisputes((prev) =>
-            prev.map((dispute) => {
-                if (dispute.id === disputeId) {
-                    const newVotes = [...dispute.votes, vote];
-
-                    // Check if dispute should be resolved (3 votes)
-                    if (newVotes.length >= 3) {
-                        const clientVotes = newVotes.filter((v) => v.decision === 'client').length;
-                        const freelancerVotes = newVotes.filter((v) => v.decision === 'freelancer').length;
-
-                        const winner = clientVotes > freelancerVotes ? 'client' : 'freelancer';
-
-                        return {
-                            ...dispute,
-                            votes: newVotes,
-                            status: 'RESOLVED' as const,
-                            winner,
-                            resolvedAt: Date.now(),
-                        };
-                    }
-
-                    return { ...dispute, votes: newVotes };
-                }
-                return dispute;
-            })
-        );
+    const addVote = async (disputeId: string, vote: Vote) => {
+        await addVoteToDispute(disputeId, vote);
+        await loadDisputes();
     };
 
-    const resolveDispute = (disputeId: string, winner: 'client' | 'freelancer') => {
-        setDisputes((prev) =>
-            prev.map((dispute) =>
-                dispute.id === disputeId
-                    ? { ...dispute, status: 'RESOLVED' as const, winner, resolvedAt: Date.now() }
-                    : dispute
-            )
-        );
+    const resolveDispute = async (disputeId: string, winner: 'client' | 'freelancer') => {
+        await resolveDisputeInStorage(disputeId, winner);
+        await loadDisputes();
     };
 
     const getDisputeByJobId = (jobId: string) => {
@@ -85,7 +51,7 @@ export function DisputeProvider({ children }: { children: ReactNode }) {
 
     return (
         <DisputeContext.Provider
-            value={{ disputes, addDispute, addVote, resolveDispute, getDisputeByJobId }}
+            value={{ disputes, addDispute, addVote, resolveDispute, getDisputeByJobId, refreshDisputes: loadDisputes }}
         >
             {children}
         </DisputeContext.Provider>

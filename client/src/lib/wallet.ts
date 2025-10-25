@@ -51,15 +51,29 @@ export async function connectWallet(): Promise<string | null> {
 
 export async function signTransaction(xdr: string, networkPassphrase: string): Promise<string> {
     try {
+        console.log('🔏 Signing transaction...');
         const result = await freighterSignTransaction(xdr, {
             networkPassphrase,
         });
+
+        console.log('🔏 Sign result:', result);
+
+        if (!result) {
+            throw new Error('No result from Freighter');
+        }
+
         if (result.error) {
             throw new Error(result.error);
         }
+
+        if (!result.signedTxXdr) {
+            throw new Error('No signed transaction returned from Freighter');
+        }
+
+        console.log('✅ Transaction signed successfully');
         return result.signedTxXdr;
     } catch (error) {
-        console.error('Transaction signing error:', error);
+        console.error('❌ Transaction signing error:', error);
         throw error;
     }
 }

@@ -20,6 +20,34 @@ export const supabase = supabaseUrl && supabaseKey ? {
                     return { data: null, error };
                 }
             },
+            eq: async (column: string, value: any) => {
+                try {
+                    const response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=${columns}&${column}=eq.${value}`, {
+                        headers: {
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`,
+                        },
+                    });
+                    const data = await response.json();
+                    return { data, error: null };
+                } catch (error) {
+                    return { data: null, error };
+                }
+            },
+            single: async () => {
+                try {
+                    const response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=${columns}&limit=1`, {
+                        headers: {
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`,
+                        },
+                    });
+                    const data = await response.json();
+                    return { data: data[0] || null, error: null };
+                } catch (error) {
+                    return { data: null, error };
+                }
+            },
         }),
         insert: async (values: any) => {
             try {
@@ -29,7 +57,7 @@ export const supabase = supabaseUrl && supabaseKey ? {
                         'apikey': supabaseKey,
                         'Authorization': `Bearer ${supabaseKey}`,
                         'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal',
+                        'Prefer': 'return=representation',
                     },
                     body: JSON.stringify(values),
                 });
@@ -37,7 +65,8 @@ export const supabase = supabaseUrl && supabaseKey ? {
                     const error = await response.text();
                     return { data: null, error: new Error(error) };
                 }
-                return { data: values, error: null };
+                const data = await response.json();
+                return { data, error: null };
             } catch (error) {
                 return { data: null, error };
             }

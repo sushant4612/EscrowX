@@ -6,6 +6,7 @@ import { useJobs } from '@/contexts/JobContext';
 import { useDisputes } from '@/contexts/DisputeContext';
 import { JobStatus } from '@/lib/stellar';
 import CreateJobSection from './CreateJobSection';
+import PendingReleases from './PendingReleases';
 
 export default function ClientDashboard() {
     const { publicKey } = useWallet();

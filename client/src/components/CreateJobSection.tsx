@@ -33,20 +33,51 @@ export default function CreateJobSection() {
             return;
         }
 
-        if (!confirm(`Lock ${formData.amount} XLM in blockchain escrow?`)) {
-            return;
-        }
-
         setLoading(true);
         try {
+            // Validate freelancer account exists
+            console.log('🔍 Validating freelancer account:', formData.freelancer);
+            const { getAccountBalance } = await import('@/lib/stellar');
+
+            try {
+                await getAccountBalance(formData.freelancer);
+                console.log('✅ Freelancer account exists');
+            } catch (error) {
+                setLoading(false);
+                alert(`❌ Freelancer account not found!\n\nThe address "${formData.freelancer}" does not exist on Stellar testnet.\n\nMake sure:\n1. The address is correct\n2. The account has been activated (received XLM)\n3. You're using a testnet address`);
+                return;
+            }
+
+            if (!confirm(`Lock ${formData.amount} XLM in blockchain escrow?`)) {
+                setLoading(false);
+                return;
+            }
+
             const { createRealEscrow } = await import('@/lib/escrow');
             const { escrowPublicKey, escrowSecret } = await createRealEscrow(
                 publicKey,
                 formData.amount
             );
 
-            // Store escrow secret in localStorage (for demo)
             const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            // Store escrow secret in Supabase for cross-browser access
+            const { supabase, isSupabaseConfigured } = await import('@/lib/supabase');
+            if (isSupabaseConfigured() && supabase) {
+                try {
+                    await supabase.from('escrow_keys').insert({
+                        job_id: jobId,
+                        escrow_account: escrowPublicKey,
+                        escrow_secret: escrowSecret,
+                        client_address: publicKey
+                    });
+                    console.log('✅ Escrow key stored in Supabase');
+                } catch (error) {
+                    console.error('Failed to store escrow key in Supabase:', error);
+                }
+            }
+
+            // Also store in localStorage as backup
             localStorage.setItem(`escrow_${jobId}`, escrowSecret);
 
             addJob({

@@ -28,26 +28,16 @@ export default function ArbitratorDashboard() {
         }
     }, [publicKey]);
 
-    // Debug logging
-    useEffect(() => {
-        console.log('🔍 Arbitrator Dashboard Debug:', {
-            myAddress: publicKey,
-            totalDisputes: disputes.length,
-            activeDisputesForMe: activeDisputes.length,
-            allDisputes: disputes.map(d => ({
-                id: d.id.slice(-8),
-                status: d.status,
-                client: d.client.slice(0, 8),
-                freelancer: d.freelancer.slice(0, 8),
-                canIVote: d.client !== publicKey && d.freelancer !== publicKey
-            }))
-        });
-    }, [disputes, activeDisputes, publicKey]);
-
     const loadStats = async () => {
         if (!publicKey) return;
-        const arbitratorStats = await getArbitratorStats(publicKey);
-        setStats(arbitratorStats);
+        try {
+            const arbitratorStats = await getArbitratorStats(publicKey);
+            setStats(arbitratorStats);
+        } catch (error) {
+            console.error('Failed to load stats:', error);
+            // Set defaults on error
+            setStats({ balance: '0', stakedAmount: '0', votingPower: 0 });
+        }
     };
 
     const handleStake = async () => {
@@ -65,9 +55,7 @@ export default function ArbitratorDashboard() {
 
         setLoading(true);
         try {
-            console.log('📤 Calling stakeAsArbitrator...');
             const result = await stakeAsArbitrator(publicKey, stakeAmount);
-            console.log('✅ Stake result:', result);
 
             // Store stake info
             const currentStake = parseFloat(localStorage.getItem(`arbitrator_stake_${publicKey}`) || '0');
@@ -196,30 +184,16 @@ export default function ArbitratorDashboard() {
                     </div>
                 </div>
 
-                {/* Debug Info */}
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
-                    <p className="text-sm font-semibold text-yellow-900 mb-2">📊 Debug Info:</p>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-yellow-800">
-                        <div>Total Disputes: {disputes.length}</div>
-                        <div>Available to Vote: {activeDisputes.length}</div>
-                        <div>My Address: {publicKey?.slice(0, 8)}...{publicKey?.slice(-8)}</div>
-                        <div>Balance: {stats.balance} XLM</div>
-                    </div>
-                    <button
-                        onClick={() => {
-                            console.log('All disputes:', disputes);
-                            console.log('Active for me:', activeDisputes);
-                            alert('Check browser console (F12) for details');
-                        }}
-                        className="mt-2 text-xs text-yellow-700 underline hover:text-yellow-900"
-                    >
-                        View in Console
-                    </button>
-                </div>
-
                 {/* Active Disputes */}
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">⚖️ Active Disputes ({activeDisputes.length})</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-gray-900">⚖️ Active Disputes ({activeDisputes.length})</h2>
+                        {disputes.length > 0 && activeDisputes.length === 0 && (
+                            <span className="text-sm text-gray-500">
+                                {disputes.length} dispute(s) exist but you're involved in them
+                            </span>
+                        )}
+                    </div>
                     <div className="grid gap-6">
                         {activeDisputes.map((dispute) => {
                             const hasVoted = dispute.votes.some((v) => v.arbitratorAddress === publicKey);

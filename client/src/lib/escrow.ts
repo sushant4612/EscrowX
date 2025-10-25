@@ -37,9 +37,15 @@ export async function createRealEscrow(
         // Get transaction XDR for signing
         const xdr = transaction.toXDR();
 
+        console.log('📤 Requesting signature from Freighter...');
         // Sign with Freighter
         const signedXdr = await signTransaction(xdr, NETWORK_PASSPHRASE);
 
+        if (!signedXdr) {
+            throw new Error('Failed to sign transaction');
+        }
+
+        console.log('📥 Transaction signed, submitting to network...');
         // Submit to network
         const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
             signedXdr,
@@ -48,7 +54,7 @@ export async function createRealEscrow(
 
         const result = await server.submitTransaction(signedTransaction as any);
 
-        console.log('Escrow account created!');
+        console.log('✅ Escrow account created!');
         console.log('Transaction hash:', result.hash);
         console.log(`${amount} XLM deducted from client account`);
 
@@ -56,9 +62,10 @@ export async function createRealEscrow(
             escrowPublicKey: escrowKeypair.publicKey(),
             escrowSecret: escrowKeypair.secret(),
         };
-    } catch (error) {
-        console.error('Error creating escrow:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('❌ Error creating escrow:', error);
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        throw new Error(`Escrow creation failed: ${errorMsg}`);
     }
 }
 
@@ -71,7 +78,17 @@ export async function releaseEscrowFunds(
     freelancerPublicKey: string
 ): Promise<string> {
     try {
-        console.log('Releasing funds from escrow...');
+        console.log('💰 Releasing funds from escrow...');
+        console.log('Escrow:', escrowPublicKey);
+        console.log('Freelancer:', freelancerPublicKey);
+
+        // Validate freelancer account exists
+        try {
+            await server.loadAccount(freelancerPublicKey);
+            console.log('✅ Freelancer account exists');
+        } catch (error) {
+            throw new Error(`Freelancer account not found: ${freelancerPublicKey}. The account must be activated on Stellar before receiving funds.`);
+        }
 
         const escrowKeypair = StellarSdk.Keypair.fromSecret(escrowSecret);
         const escrowAccount = await server.loadAccount(escrowPublicKey);
@@ -111,16 +128,18 @@ export async function releaseEscrowFunds(
         transaction.sign(escrowKeypair);
 
         // Submit
+        console.log('📡 Submitting payment transaction...');
         const result = await server.submitTransaction(transaction);
 
-        console.log('Funds released!');
+        console.log('✅ Funds released!');
         console.log('Transaction hash:', result.hash);
         console.log(`${amount} XLM sent to freelancer`);
 
         return result.hash;
-    } catch (error) {
-        console.error('Error releasing funds:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('❌ Error releasing funds:', error);
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        throw new Error(`Fund release failed: ${errorMsg}`);
     }
 }
 
