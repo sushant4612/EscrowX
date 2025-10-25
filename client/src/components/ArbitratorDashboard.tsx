@@ -1,0 +1,341 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useWallet } from '@/contexts/WalletContext';
+import { useDisputes } from '@/contexts/DisputeContext';
+import { stakeAsArbitrator, submitVoteWithStake, getArbitratorStats } from '@/lib/dao';
+
+export default function ArbitratorDashboard() {
+    const { publicKey } = useWallet();
+    const { disputes, addVote } = useDisputes();
+    const [stakeAmount, setStakeAmount] = useState('10');
+    const [voteStakes, setVoteStakes] = useState<Record<string, string>>({});
+    const [stats, setStats] = useState({ balance: '0', stakedAmount: '0', votingPower: 0 });
+    const [loading, setLoading] = useState(false);
+
+    // Filter out disputes where current user is client or freelancer
+    const activeDisputes = disputes.filter((d) => {
+        const isActive = d.status === 'ACTIVE';
+        const isNotInvolved = d.client !== publicKey && d.freelancer !== publicKey;
+        return isActive && isNotInvolved;
+    });
+
+    const myVotes = disputes.flatMap((d) => d.votes.filter((v) => v.arbitratorAddress === publicKey));
+
+    useEffect(() => {
+        if (publicKey) {
+            loadStats();
+        }
+    }, [publicKey]);
+
+    // Debug logging
+    useEffect(() => {
+        console.log('🔍 Arbitrator Dashboard Debug:', {
+            myAddress: publicKey,
+            totalDisputes: disputes.length,
+            activeDisputesForMe: activeDisputes.length,
+            allDisputes: disputes.map(d => ({
+                id: d.id.slice(-8),
+                status: d.status,
+                client: d.client.slice(0, 8),
+                freelancer: d.freelancer.slice(0, 8),
+                canIVote: d.client !== publicKey && d.freelancer !== publicKey
+            }))
+        });
+    }, [disputes, activeDisputes, publicKey]);
+
+    const loadStats = async () => {
+        if (!publicKey) return;
+        const arbitratorStats = await getArbitratorStats(publicKey);
+        setStats(arbitratorStats);
+    };
+
+    const handleStake = async () => {
+        console.log('🔒 Staking attempt:', { publicKey, stakeAmount });
+
+        if (!publicKey) {
+            alert('Please connect your wallet');
+            return;
+        }
+
+        if (parseFloat(stakeAmount) < 10) {
+            alert('Minimum stake is 10 XLM');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            console.log('📤 Calling stakeAsArbitrator...');
+            const result = await stakeAsArbitrator(publicKey, stakeAmount);
+            console.log('✅ Stake result:', result);
+
+            // Store stake info
+            const currentStake = parseFloat(localStorage.getItem(`arbitrator_stake_${publicKey}`) || '0');
+            const newStake = currentStake + parseFloat(stakeAmount);
+            localStorage.setItem(`arbitrator_stake_${publicKey}`, newStake.toString());
+
+            alert(`✅ Staked ${stakeAmount} XLM successfully!\n\nTransaction: ${result.txHash}\n\nYou can now vote on disputes!`);
+            await loadStats();
+        } catch (error: any) {
+            alert(`❌ Staking failed: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVote = async (disputeId: string, decision: 'client' | 'freelancer') => {
+        if (!publicKey) {
+            alert('Please connect your wallet');
+            return;
+        }
+
+        const voteStake = voteStakes[disputeId] || '10';
+        if (parseFloat(voteStake) < 10) {
+            alert('Minimum vote stake is 10 XLM');
+            return;
+        }
+
+        if (!confirm(`Vote for ${decision} with ${voteStake} XLM stake?\n\nYou'll earn rewards if you vote with the majority!`)) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const txHash = await submitVoteWithStake(publicKey, disputeId, decision, voteStake);
+
+            addVote(disputeId, {
+                arbitratorAddress: publicKey,
+                decision,
+                stake: voteStake,
+                timestamp: Date.now(),
+                txHash,
+            });
+
+            alert(`✅ Vote submitted!\n\nTransaction: ${txHash}\n\nYour ${voteStake} XLM stake is locked until dispute resolves.`);
+            await loadStats();
+        } catch (error: any) {
+            alert(`❌ Vote failed: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-full p-8">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                                ⚖️ Arbitrator DAO
+                            </h1>
+                            <p className="text-gray-600">Vote on disputes and earn rewards</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500">Voting Power</p>
+                            <p className="text-4xl font-bold text-purple-600">{stats.votingPower}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 text-sm">Wallet Balance</p>
+                                <p className="text-3xl font-bold text-blue-600">{parseFloat(stats.balance).toFixed(2)} XLM</p>
+                            </div>
+                            <div className="text-4xl">💰</div>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 text-sm">Total Staked</p>
+                                <p className="text-3xl font-bold text-purple-600">{stats.stakedAmount} XLM</p>
+                            </div>
+                            <div className="text-4xl">🔒</div>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 text-sm">Total Votes</p>
+                                <p className="text-3xl font-bold text-green-600">{myVotes.length}</p>
+                            </div>
+                            <div className="text-4xl">🗳️</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stake Section */}
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-8 mb-8 text-white">
+                    <h2 className="text-3xl font-bold mb-4">🏦 Stake to Become Arbitrator</h2>
+                    <p className="mb-6 text-purple-100">
+                        Stake XLM to gain voting power. Each 10 XLM = 1 voting power. Earn rewards for correct votes!
+                    </p>
+                    <div className="flex gap-4">
+                        <input
+                            type="number"
+                            value={stakeAmount}
+                            onChange={(e) => setStakeAmount(e.target.value)}
+                            placeholder="Amount (min 10 XLM)"
+                            className="flex-1 px-6 py-4 rounded-lg text-gray-900 text-lg font-semibold"
+                            min="10"
+                            step="10"
+                        />
+                        <button
+                            onClick={handleStake}
+                            disabled={loading}
+                            className="px-8 py-4 bg-white text-purple-600 rounded-lg hover:bg-purple-50 transition font-bold text-lg disabled:opacity-50"
+                        >
+                            {loading ? '⏳ Staking...' : '🔒 Stake Now'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Debug Info */}
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
+                    <p className="text-sm font-semibold text-yellow-900 mb-2">📊 Debug Info:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-yellow-800">
+                        <div>Total Disputes: {disputes.length}</div>
+                        <div>Available to Vote: {activeDisputes.length}</div>
+                        <div>My Address: {publicKey?.slice(0, 8)}...{publicKey?.slice(-8)}</div>
+                        <div>Balance: {stats.balance} XLM</div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            console.log('All disputes:', disputes);
+                            console.log('Active for me:', activeDisputes);
+                            alert('Check browser console (F12) for details');
+                        }}
+                        className="mt-2 text-xs text-yellow-700 underline hover:text-yellow-900"
+                    >
+                        View in Console
+                    </button>
+                </div>
+
+                {/* Active Disputes */}
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">⚖️ Active Disputes ({activeDisputes.length})</h2>
+                    <div className="grid gap-6">
+                        {activeDisputes.map((dispute) => {
+                            const hasVoted = dispute.votes.some((v) => v.arbitratorAddress === publicKey);
+                            const clientVotes = dispute.votes.filter((v) => v.decision === 'client').length;
+                            const freelancerVotes = dispute.votes.filter((v) => v.decision === 'freelancer').length;
+
+                            return (
+                                <div key={dispute.id} className="bg-white rounded-xl shadow-lg p-6 border-2 border-purple-200">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                                Dispute #{dispute.id.slice(-8)}
+                                            </h3>
+                                            <p className="text-gray-600 mb-1">
+                                                <strong>Job:</strong> {dispute.jobDescription}
+                                            </p>
+                                            <p className="text-gray-600">
+                                                <strong>Amount:</strong> {dispute.jobAmount} XLM
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="inline-block px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-bold">
+                                                {dispute.votes.length}/3 VOTES
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Evidence */}
+                                    <div className="grid grid-cols-2 gap-4 mb-6">
+                                        <div className="bg-blue-50 rounded-lg p-4">
+                                            <p className="font-bold text-blue-900 mb-2">👔 Client Evidence:</p>
+                                            <p className="text-sm text-gray-700">
+                                                {dispute.clientEvidence || 'No evidence provided'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-4">
+                                            <p className="font-bold text-green-900 mb-2">💼 Freelancer Evidence:</p>
+                                            <p className="text-sm text-gray-700">
+                                                {dispute.freelancerEvidence || 'No evidence provided'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Vote Progress */}
+                                    <div className="mb-6">
+                                        <div className="flex justify-between text-sm text-gray-600 mb-2">
+                                            <span>Client: {clientVotes} votes</span>
+                                            <span>Freelancer: {freelancerVotes} votes</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                            <div className="flex h-full">
+                                                <div
+                                                    className="bg-blue-600"
+                                                    style={{ width: `${(clientVotes / 3) * 100}%` }}
+                                                />
+                                                <div
+                                                    className="bg-green-600"
+                                                    style={{ width: `${(freelancerVotes / 3) * 100}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Voting */}
+                                    {!hasVoted ? (
+                                        <div className="border-t pt-4">
+                                            <p className="text-sm text-gray-600 mb-3">Your vote stake (min 10 XLM):</p>
+                                            <input
+                                                type="number"
+                                                value={voteStakes[dispute.id] || '10'}
+                                                onChange={(e) =>
+                                                    setVoteStakes((prev) => ({ ...prev, [dispute.id]: e.target.value }))
+                                                }
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
+                                                min="10"
+                                                step="5"
+                                            />
+                                            <div className="flex gap-4">
+                                                <button
+                                                    onClick={() => handleVote(dispute.id, 'client')}
+                                                    disabled={loading}
+                                                    className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-lg disabled:opacity-50"
+                                                >
+                                                    👔 Vote Client
+                                                </button>
+                                                <button
+                                                    onClick={() => handleVote(dispute.id, 'freelancer')}
+                                                    disabled={loading}
+                                                    className="flex-1 px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-bold text-lg disabled:opacity-50"
+                                                >
+                                                    💼 Vote Freelancer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+                                            <p className="text-purple-900 font-semibold text-center">
+                                                ✅ You've already voted on this dispute
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                        {activeDisputes.length === 0 && (
+                            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                                <div className="text-6xl mb-4">🕐</div>
+                                <p className="text-gray-700 text-lg font-semibold mb-2">No disputes available for voting</p>
+                                <p className="text-gray-500 text-sm">
+                                    You can only vote on disputes where you're not the client or freelancer
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

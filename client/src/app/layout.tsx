@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { JobProvider } from "@/contexts/JobContext";
+import { DisputeProvider } from "@/contexts/DisputeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
       >
         <WalletProvider>
           <JobProvider>
-            {children}
+            <DisputeProvider>
+              {children}
+            </DisputeProvider>
           </JobProvider>
         </WalletProvider>
       </body>
