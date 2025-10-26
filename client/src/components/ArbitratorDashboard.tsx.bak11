@@ -121,8 +121,8 @@ export default function ArbitratorDashboard() {
                             <p className="text-white">Vote on disputes and earn rewards</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-400">Voting Power</p>
-                            <p className="text-4xl font-bold text-purple-400">{stats.votingPower}</p>
+                            <p className="text-sm text-gray-500">Voting Power</p>
+                            <p className="text-4xl font-bold text-purple-600">{stats.votingPower}</p>
                         </div>
                     </div>
                 </div>
@@ -132,8 +132,8 @@ export default function ArbitratorDashboard() {
                     <div className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-400 text-sm">Wallet Balance</p>
-                                <p className="text-3xl font-bold text-blue-400">{parseFloat(stats.balance).toFixed(2)} XLM</p>
+                                <p className="text-gray-500 text-sm">Wallet Balance</p>
+                                <p className="text-3xl font-bold text-blue-600">{parseFloat(stats.balance).toFixed(2)} XLM</p>
                             </div>
                             <div className="text-4xl">💰</div>
                         </div>
@@ -141,8 +141,8 @@ export default function ArbitratorDashboard() {
                     <div className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-400 text-sm">Total Staked</p>
-                                <p className="text-3xl font-bold text-purple-400">{stats.stakedAmount} XLM</p>
+                                <p className="text-gray-500 text-sm">Total Staked</p>
+                                <p className="text-3xl font-bold text-purple-600">{stats.stakedAmount} XLM</p>
                             </div>
                             <div className="text-4xl">🔒</div>
                         </div>
@@ -150,8 +150,8 @@ export default function ArbitratorDashboard() {
                     <div className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-400 text-sm">Total Votes</p>
-                                <p className="text-3xl font-bold text-green-400">{myVotes.length}</p>
+                                <p className="text-gray-500 text-sm">Total Votes</p>
+                                <p className="text-3xl font-bold text-green-600">{myVotes.length}</p>
                             </div>
                             <div className="text-4xl">🗳️</div>
                         </div>
@@ -163,7 +163,7 @@ export default function ArbitratorDashboard() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white">⚖️ Active Disputes ({activeDisputes.length})</h2>
                         {disputes.length > 0 && activeDisputes.length === 0 && (
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm text-gray-500">
                                 {disputes.length} dispute(s) exist but you're involved in them
                             </span>
                         )}
@@ -178,13 +178,13 @@ export default function ArbitratorDashboard() {
                                 <div key={dispute.id} className="dark-card rounded-xl shadow-xl p-6 border-2 border-purple-700/50">
                                     <div className="flex justify-between items-start mb-6">
                                         <div>
-                                            <h3 className="text-2xl font-bold text-white mb-2">
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-2">
                                                 Dispute #{dispute.id.slice(-8)}
                                             </h3>
-                                            <p className="text-gray-300 mb-1">
+                                            <p className="text-gray-600 mb-1">
                                                 <strong>Job:</strong> {dispute.jobDescription}
                                             </p>
-                                            <p className="text-gray-300">
+                                            <p className="text-gray-600">
                                                 <strong>Amount:</strong> {dispute.jobAmount} XLM
                                             </p>
                                         </div>
@@ -213,7 +213,7 @@ export default function ArbitratorDashboard() {
 
                                     {/* Vote Progress */}
                                     <div className="mb-6">
-                                        <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                        <div className="flex justify-between text-sm text-gray-600 mb-2">
                                             <span>Client: {clientVotes} votes</span>
                                             <span>Freelancer: {freelancerVotes} votes</span>
                                         </div>
@@ -234,7 +234,7 @@ export default function ArbitratorDashboard() {
                                     {/* Voting */}
                                     {!hasVoted ? (
                                         <div className="border-t pt-4">
-                                            <p className="text-sm text-gray-300 mb-3">Your vote stake (min 10 XLM):</p>
+                                            <p className="text-sm text-gray-600 mb-3">Your vote stake (min 10 XLM):</p>
                                             <input
                                                 type="number"
                                                 value={voteStakes[dispute.id] || '10'}
@@ -276,7 +276,7 @@ export default function ArbitratorDashboard() {
                             <div className="dark-card rounded-xl shadow-xl p-12 text-center">
                                 <div className="text-6xl mb-4">🕐</div>
                                 <p className="text-gray-300 text-lg font-semibold mb-2">No disputes available for voting</p>
-                                <p className="text-gray-400 text-sm">
+                                <p className="text-gray-500 text-sm">
                                     You can only vote on disputes where you're not the client or freelancer
                                 </p>
                             </div>

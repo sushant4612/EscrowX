@@ -1,6 +1,6 @@
 import {
     isConnected,
-    getAddress,
+    getPublicKey,
     requestAccess,
     setAllowed,
     signTransaction as freighterSignTransaction,
@@ -24,24 +24,18 @@ export async function connectWallet(): Promise<string | null> {
             }
         }
 
-        // Now get the address
-        const result = await getAddress();
-        console.log('Wallet connection result:', result);
+        // Now get the public key
+        const publicKey = await getPublicKey();
+        console.log('Wallet connection result:', publicKey);
 
-        if (result.error) {
-            console.error('Wallet connection error:', result.error);
-            alert(`Wallet connection failed: ${result.error}\n\nPlease make sure:\n1. Freighter is unlocked\n2. You have an account created\n3. You approve the connection request`);
-            return null;
-        }
-
-        if (!result.address || result.address === '') {
-            console.error('No address returned from wallet');
+        if (!publicKey || publicKey === '') {
+            console.error('No public key returned from wallet');
             alert('No address returned from wallet.\n\nPlease:\n1. Open Freighter extension\n2. Make sure you have an account created\n3. Make sure the account is unlocked\n4. Try connecting again');
             return null;
         }
 
-        console.log('Successfully connected to wallet:', result.address);
-        return result.address;
+        console.log('Successfully connected to wallet:', publicKey);
+        return publicKey;
     } catch (error) {
         console.error('Wallet connection error:', error);
         alert(`Failed to connect wallet: ${error instanceof Error ? error.message : 'Unknown error'}\n\nMake sure Freighter is installed and unlocked.`);

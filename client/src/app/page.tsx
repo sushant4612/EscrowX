@@ -12,10 +12,10 @@ export default function Home() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="text-6xl mb-4 animate-pulse">⚡</div>
-        <p className="text-xl text-gray-700">Loading Stellar Escrow...</p>
+        <p className="text-xl text-gray-200">Loading Stellar Escrow...</p>
       </div>
     </div>
   );

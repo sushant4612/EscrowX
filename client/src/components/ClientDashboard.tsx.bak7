@@ -79,10 +79,10 @@ export default function ClientDashboard() {
                 <div className="dark-card rounded-2xl shadow-2xl p-8 mb-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-bold text-white mb-2">
-                                Client Dashboard
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                                👔 Client Dashboard
                             </h1>
-                            <p className="text-white">Manage your projects and payments</p>
+                            <p className="text-gray-600">Manage your projects and payments</p>
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-500">Total Spent</p>
@@ -136,7 +136,7 @@ export default function ClientDashboard() {
 
                 {/* Active Projects */}
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-4">📋 Active Projects</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">📋 Active Projects</h2>
                     <div className="grid gap-4">
                         {pendingJobs.map((job) => (
                             <div key={job.id} className="dark-card rounded-xl shadow-xl p-6">
@@ -167,10 +167,10 @@ export default function ClientDashboard() {
 
                 {/* Pending Review */}
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-4">👀 Pending Your Review</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">👀 Pending Your Review</h2>
                     <div className="grid gap-4">
                         {completedJobs.map((job) => (
-                            <div key={job.id} className="dark-card rounded-xl shadow-xl p-6 border-2 border-yellow-700/50">
+                            <div key={job.id} className="bg-white rounded-xl shadow-lg p-6 border-2 border-yellow-200">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <h3 className="text-xl font-semibold text-gray-900">{job.description}</h3>
@@ -184,18 +184,18 @@ export default function ClientDashboard() {
                                     </div>
                                 </div>
 
-                                <div className="border-t border-purple-950/50 pt-4">
+                                <div className="border-t pt-4">
                                     <div className="flex gap-3 mb-4">
                                         <button
                                             onClick={() => handleApprove(job)}
-                                            className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-semibold shadow-lg"
+                                            className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
                                         >
                                             ✅ Approve & Release Funds
                                         </button>
                                     </div>
 
-                                    <div className="bg-black/70 rounded-lg p-4 border border-purple-950/50">
-                                        <p className="text-sm text-gray-300 mb-2 font-medium">
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-2 font-medium">
                                             Not satisfied? Provide evidence and raise dispute:
                                         </p>
                                         <textarea
@@ -204,12 +204,12 @@ export default function ClientDashboard() {
                                                 setEvidenceText((prev) => ({ ...prev, [job.id]: e.target.value }))
                                             }
                                             placeholder="Explain why work is unsatisfactory (provide screenshots, requirements not met...)"
-                                            className="w-full px-4 py-2 bg-gray-800/50 border border-purple-950/70 text-white rounded-lg mb-3 focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                             rows={3}
                                         />
                                         <button
                                             onClick={() => handleReject(job)}
-                                            className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition font-semibold shadow-lg"
+                                            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
                                         >
                                             ⚖️ Reject & Raise Dispute
                                         </button>
@@ -233,7 +233,7 @@ export default function ClientDashboard() {
                             {disputedJobs.map((job) => {
                                 const dispute = disputes.find((d) => d.jobId === job.id);
                                 return (
-                                    <div key={job.id} className="bg-red-900/30 border-2 border-red-700/50 rounded-xl shadow-xl p-6 backdrop-blur-lg">
+                                    <div key={job.id} className="bg-red-50 border-2 border-red-200 rounded-xl shadow-lg p-6">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h3 className="text-xl font-semibold text-gray-900">{job.description}</h3>
@@ -247,7 +247,7 @@ export default function ClientDashboard() {
                                             </div>
                                         </div>
                                         {dispute && (
-                                            <div className="bg-black/70 rounded-lg p-4 border border-purple-950/50">
+                                            <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                                 <p className="text-sm text-gray-600 mb-2">
                                                     <strong>Your Evidence:</strong> {dispute.clientEvidence}
                                                 </p>

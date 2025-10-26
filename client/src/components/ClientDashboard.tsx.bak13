@@ -184,7 +184,7 @@ export default function ClientDashboard() {
                                     </div>
                                 </div>
 
-                                <div className="border-t border-purple-950/50 pt-4">
+                                <div className="border-t border-gray-700 pt-4">
                                     <div className="flex gap-3 mb-4">
                                         <button
                                             onClick={() => handleApprove(job)}
@@ -194,7 +194,7 @@ export default function ClientDashboard() {
                                         </button>
                                     </div>
 
-                                    <div className="bg-black/70 rounded-lg p-4 border border-purple-950/50">
+                                    <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                         <p className="text-sm text-gray-300 mb-2 font-medium">
                                             Not satisfied? Provide evidence and raise dispute:
                                         </p>
@@ -204,7 +204,7 @@ export default function ClientDashboard() {
                                                 setEvidenceText((prev) => ({ ...prev, [job.id]: e.target.value }))
                                             }
                                             placeholder="Explain why work is unsatisfactory (provide screenshots, requirements not met...)"
-                                            className="w-full px-4 py-2 bg-gray-800/50 border border-purple-950/70 text-white rounded-lg mb-3 focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
+                                            className="w-full px-4 py-2 bg-gray-800/50 border border-gray-600 text-white rounded-lg mb-3 focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
                                             rows={3}
                                         />
                                         <button
@@ -247,7 +247,7 @@ export default function ClientDashboard() {
                                             </div>
                                         </div>
                                         {dispute && (
-                                            <div className="bg-black/70 rounded-lg p-4 border border-purple-950/50">
+                                            <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                                 <p className="text-sm text-gray-600 mb-2">
                                                     <strong>Your Evidence:</strong> {dispute.clientEvidence}
                                                 </p>
