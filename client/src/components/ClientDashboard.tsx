@@ -1,12 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useWallet } from '@/contexts/WalletContext';
 import { useJobs } from '@/contexts/JobContext';
 import { useDisputes } from '@/contexts/DisputeContext';
 import { JobStatus } from '@/lib/stellar';
 import CreateJobSection from './CreateJobSection';
-import PendingReleases from './PendingReleases';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5 }
+    }
+};
 
 export default function ClientDashboard() {
     const { publicKey } = useWallet();
@@ -73,63 +92,69 @@ export default function ClientDashboard() {
     };
 
     return (
-        <div className="min-h-full p-8">
-            <div className="max-w-7xl mx-auto">
+        <motion.div
+            className="min-h-full p-8"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+        >
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="dark-card rounded-2xl shadow-2xl p-8 mb-8">
+                <motion.div variants={itemVariants} className="dark-card rounded-2xl shadow-2xl p-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-bold text-white mb-2">
+                            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                                <span>👔</span>
                                 Client Dashboard
                             </h1>
-                            <p className="text-white">Manage your projects and payments</p>
+                            <p className="text-gray-300">Manage your projects and payments</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-500">Total Spent</p>
-                            <p className="text-4xl font-bold text-blue-600">{totalSpent.toFixed(2)} XLM</p>
+                            <p className="text-sm text-gray-400">Total Spent</p>
+                            <p className="text-4xl font-bold text-purple-400">{totalSpent.toFixed(2)} XLM</p>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-4 gap-6 mb-8">
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm">Active Projects</p>
-                                <p className="text-3xl font-bold text-blue-600">{pendingJobs.length}</p>
+                                <p className="text-gray-400 text-sm">Active Projects</p>
+                                <p className="text-3xl font-bold text-blue-400">{pendingJobs.length}</p>
                             </div>
                             <div className="text-4xl">📋</div>
                         </div>
-                    </div>
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm">Pending Review</p>
-                                <p className="text-3xl font-bold text-yellow-600">{completedJobs.length}</p>
+                                <p className="text-gray-400 text-sm">Pending Review</p>
+                                <p className="text-3xl font-bold text-yellow-400">{completedJobs.length}</p>
                             </div>
                             <div className="text-4xl">👀</div>
                         </div>
-                    </div>
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm">Locked Funds</p>
-                                <p className="text-3xl font-bold text-orange-600">{lockedFunds.toFixed(2)} XLM</p>
+                                <p className="text-gray-400 text-sm">Locked Funds</p>
+                                <p className="text-3xl font-bold text-orange-400">{lockedFunds.toFixed(2)} XLM</p>
                             </div>
                             <div className="text-4xl">🔒</div>
                         </div>
-                    </div>
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm">Disputes</p>
-                                <p className="text-3xl font-bold text-red-600">{disputedJobs.length}</p>
+                                <p className="text-gray-400 text-sm">Disputes</p>
+                                <p className="text-3xl font-bold text-red-400">{disputedJobs.length}</p>
                             </div>
                             <div className="text-4xl">⚖️</div>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
 
                 {/* Create Job Section */}
                 <CreateJobSection />
@@ -290,6 +315,6 @@ export default function ClientDashboard() {
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div >
     );
 }

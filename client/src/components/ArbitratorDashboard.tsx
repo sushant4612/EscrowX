@@ -1,9 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useWallet } from '@/contexts/WalletContext';
 import { useDisputes } from '@/contexts/DisputeContext';
 import { stakeAsArbitrator, submitVoteWithStake, getArbitratorStats } from '@/lib/dao';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5 }
+    }
+};
 
 export default function ArbitratorDashboard() {
     const { publicKey } = useWallet();
@@ -109,27 +129,33 @@ export default function ArbitratorDashboard() {
     };
 
     return (
-        <div className="min-h-full p-8">
-            <div className="max-w-7xl mx-auto">
+        <motion.div
+            className="min-h-full p-8"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+        >
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="dark-card rounded-2xl shadow-2xl p-8 mb-8">
+                <motion.div variants={itemVariants} className="dark-card rounded-2xl shadow-2xl p-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-bold text-white mb-2">
-                                ⚖️ Arbitrator DAO
+                            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                                <span>⚖️</span>
+                                Arbitrator DAO
                             </h1>
-                            <p className="text-white">Vote on disputes and earn rewards</p>
+                            <p className="text-gray-300">Vote on disputes and earn rewards</p>
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-400">Voting Power</p>
                             <p className="text-4xl font-bold text-purple-400">{stats.votingPower}</p>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-400 text-sm">Wallet Balance</p>
@@ -137,8 +163,8 @@ export default function ArbitratorDashboard() {
                             </div>
                             <div className="text-4xl">💰</div>
                         </div>
-                    </div>
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-400 text-sm">Total Staked</p>
@@ -146,8 +172,8 @@ export default function ArbitratorDashboard() {
                             </div>
                             <div className="text-4xl">🔒</div>
                         </div>
-                    </div>
-                    <div className="dark-card rounded-xl shadow-xl p-6">
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="dark-card rounded-xl shadow-xl p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-gray-400 text-sm">Total Votes</p>
@@ -155,13 +181,16 @@ export default function ArbitratorDashboard() {
                             </div>
                             <div className="text-4xl">🗳️</div>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
 
                 {/* Active Disputes */}
-                <div className="mb-8">
+                <motion.div variants={itemVariants}>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-white">⚖️ Active Disputes ({activeDisputes.length})</h2>
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <span>⚖️</span>
+                            Active Disputes ({activeDisputes.length})
+                        </h2>
                         {disputes.length > 0 && activeDisputes.length === 0 && (
                             <span className="text-sm text-gray-400">
                                 {disputes.length} dispute(s) exist but you're involved in them
@@ -282,8 +311,8 @@ export default function ArbitratorDashboard() {
                             </div>
                         )}
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 }

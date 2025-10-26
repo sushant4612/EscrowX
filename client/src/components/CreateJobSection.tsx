@@ -107,24 +107,24 @@ export default function CreateJobSection() {
             {!isOpen ? (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition font-bold text-lg shadow-lg"
+                    className="w-full px-6 py-4 bg-gradient-to-r from-purple-700 to-purple-900 text-white rounded-xl hover:from-purple-800 hover:to-black transition font-bold text-lg shadow-lg shadow-purple-950/50"
                 >
                     ➕ Create New Job
                 </button>
             ) : (
-                <div className="dark-card rounded-xl shadow-xl p-6 border-2 border-blue-700/50">
+                <div className="dark-card rounded-xl shadow-xl p-6 border-2 border-purple-700/50">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-900">Create New Job</h3>
+                        <h3 className="text-xl font-bold text-white">Create New Job</h3>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-gray-400 hover:text-white transition"
                         >
                             ✕
                         </button>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Freelancer Address
                             </label>
                             <input
@@ -132,12 +132,12 @@ export default function CreateJobSection() {
                                 value={formData.freelancer}
                                 onChange={(e) => setFormData({ ...formData, freelancer: e.target.value })}
                                 placeholder="GXXX..."
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 bg-black/50 border border-purple-950/70 text-white rounded-lg focus:ring-2 focus:ring-purple-700 focus:border-transparent placeholder-gray-500"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Amount (XLM)
                             </label>
                             <input
@@ -147,12 +147,12 @@ export default function CreateJobSection() {
                                 placeholder="10"
                                 min="3"
                                 step="0.1"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 bg-black/50 border border-purple-950/70 text-white rounded-lg focus:ring-2 focus:ring-purple-700 focus:border-transparent placeholder-gray-500"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Job Description
                             </label>
                             <textarea
@@ -160,7 +160,7 @@ export default function CreateJobSection() {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 placeholder="Describe the job..."
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 bg-black/50 border border-purple-950/70 text-white rounded-lg focus:ring-2 focus:ring-purple-700 focus:border-transparent placeholder-gray-500"
                                 required
                             />
                         </div>
@@ -168,14 +168,14 @@ export default function CreateJobSection() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-700 to-purple-900 text-white rounded-lg hover:from-purple-800 hover:to-black transition font-semibold disabled:opacity-50 shadow-lg"
                             >
                                 {loading ? '⏳ Creating...' : '🔒 Create & Lock Funds'}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                                className="px-6 py-3 bg-black/60 text-gray-300 rounded-lg hover:bg-black/80 hover:text-white transition font-semibold border border-purple-950/50"
                             >
                                 Cancel
                             </button>
