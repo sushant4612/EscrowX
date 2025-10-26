@@ -56,16 +56,13 @@ export async function signTransaction(xdr: string, networkPassphrase: string): P
             throw new Error('No result from Freighter');
         }
 
-        if (result.error) {
-            throw new Error(result.error);
+        // Result is the signed XDR string directly
+        if (typeof result === 'string') {
+            console.log('✅ Transaction signed successfully');
+            return result;
         }
 
-        if (!result.signedTxXdr) {
-            throw new Error('No signed transaction returned from Freighter');
-        }
-
-        console.log('✅ Transaction signed successfully');
-        return result.signedTxXdr;
+        throw new Error('Unexpected result format from Freighter');
     } catch (error) {
         console.error('❌ Transaction signing error:', error);
         throw error;
